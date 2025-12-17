@@ -7,18 +7,6 @@ if (!isset($_SESSION['id_user'])) {
 include __DIR__ . '/../config/config.php';
 
 $user_id = $_SESSION['id_user'];
-$createSql = "CREATE TABLE IF NOT EXISTS goals (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL,
-    title VARCHAR(255) NOT NULL,
-    description TEXT,
-    target_date DATE NULL,
-    is_complete TINYINT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX(user_id),
-    FOREIGN KEY (user_id) REFERENCES users(id_user) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
-$conn->query($createSql);
 
 // fetch goals
 $stmt = $conn->prepare("SELECT * FROM goals WHERE user_id = ? ORDER BY created_at DESC");
