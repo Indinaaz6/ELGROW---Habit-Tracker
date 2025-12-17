@@ -18,38 +18,11 @@ ELGROW adalah aplikasi web yang dirancang untuk membantu pengguna membangun kebi
 ## Cara Menjalankan Website
 
 ### Masukan ke dalam file di xammp(htdocs) /laragon(www)
-### Setelah masukan filenya aktifkan apache & MYSQL
-### setelah itu buka
-```bash
-composer install
-npm install
-cp .env.example .env
-```
-### lalu sesuaikan pada .env
-```bash
-DB_DATABASE=goutside
-DB_USERNAME=root
-DB_PASSWORD=
-```
-### generate KEY
-```bash
-php artisan key:generate
-```
-### migrasi database
-```bash
-php artisan migrate
-```
-### jalankan server
-```bash
-php artisan serve
-npm run dev
-###jalankan di http://127.0.0.1:8000
-```
+### Setelah itu buat database lewat sql di admin local, untuk codenya ada didalam database_setup.sql
+### Setelah masukan databasenya, aktifkan apache & MYSQL dalam xammp/laragon
+### setelah itu buka dalam browser dengan http://localhost/ELGROW/public/index.php
 
 ## Kontributor
-Fandy Fernanda Yapari NIM 227
-Miuvanida Klandistin NIM 208
-Zikry Azizy Aljava NIM 228
-Zhidan Frizky Pradana NIM 218
-
-### WEB MASIH AKAN DIKEMBANGKAN LEBIH LANJUT
+Indina anisa zahrah 213
+Detha Gracio Anggara Palimbunga' 219
+M.Malik maulana 225
