@@ -6,27 +6,31 @@ if (!isset($_SESSION['id_user'])) {
 }
 include __DIR__ . '/../config/config.php';
 
-// Set timezone to Asia/Jakarta (WIB - UTC+7)
 date_default_timezone_set('Asia/Jakarta');
 
 $user_id = $_SESSION['id_user'];
 $today = date('Y-m-d');
 $selected_date = isset($_GET['date']) ? $_GET['date'] : $today;
 
-// Helper function to format frequency details
-function getFrequencyLabel($frequency, $daily_days, $weekly_count, $end_date) {
+function getFrequencyLabel($frequency, $daily_days, $weekly_count) {
     if ($frequency === 'daily') {
         return 'Daily';
     } elseif ($frequency === 'weekly' && $weekly_count > 0) {
+        if (!empty($daily_days)) {
+            $dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+            $daysArray = explode(',', $daily_days);
+            $labels = [];
+            foreach ($daysArray as $d) {
+                $index = (int)trim($d);
+                if (isset($dayNames[$index])) $labels[] = $dayNames[$index];
+            }
+            return 'Weekly (' . implode(', ', $labels) . ')';
+        }
         return 'Weekly (' . $weekly_count . ' days/week)';
-    } elseif ($frequency === 'custom' && $end_date) {
-        $dateObj = DateTime::createFromFormat('Y-m-d', $end_date);
-        return 'Until ' . ($dateObj ? $dateObj->format('M d, Y') : $end_date);
-    }
+    } 
     return ucfirst($frequency);
 }
 
-// Get user info
 $stmt = $conn->prepare("SELECT username FROM users WHERE id_user = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -35,37 +39,30 @@ if (!$user) {
     $user = ['username' => $_SESSION['username'] ?? 'User'];
 }
 
-// Get habits for user
 $stmt = $conn->prepare("SELECT * FROM habits WHERE user_id = ? AND (end_date IS NULL OR end_date >= ?) ORDER BY created_at DESC");
 $stmt->bind_param("is", $user_id, $selected_date);
 $stmt->execute();
 $all_habits = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Filter habits to those that should appear on the selected date
 $habits = array_filter($all_habits, function($h) use ($selected_date) {
     $freq = $h['frequency'] ?? 'daily';
     $daily_days = $h['daily_days'] ?? '';
     $weekly_count = (int)($h['weekly_count'] ?? 0);
-    // selected day of week 0 (Sun) - 6 (Sat)
     $dow = (int)date('w', strtotime($selected_date));
 
     if ($freq === 'daily') {
-        // daily now means every day
         return true;
     }
 
     if ($freq === 'weekly') {
-        // if specific weekdays selected, respect them
         if (trim($daily_days) !== '') {
             $days = array_map('trim', explode(',', $daily_days));
             return in_array((string)$dow, $days) || in_array($dow, $days, true);
         }
-        // fallback: show every day if no specific days set
         return true;
     }
 
     if ($freq === 'custom') {
-        // custom repeats until end_date (already filtered by SQL). show every day until end_date
         return true;
     }
 
@@ -261,8 +258,8 @@ $stats = $stmt->get_result()->fetch_assoc();
                 <div id="habitsContainer" class="space-y-4">
                     <?php foreach ($habits as $habit): ?>
                     <div class="habit-card bg-gray-900 rounded-2xl p-6 border border-gray-800 fade-in <?php echo in_array($habit['id'], $completed_habits) ? 'habit-completed' : ''; ?>" 
-                         data-habit-id="<?php echo $habit['id']; ?>"
-                         data-habit-name="<?php echo htmlspecialchars($habit['name']); ?>">
+                        data-habit-id="<?php echo $habit['id']; ?>"
+                        data-habit-name="<?php echo htmlspecialchars($habit['name']); ?>">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4 flex-1">
                                 <button class="habit-checkbox w-12 h-12 rounded-lg border-2 transition flex items-center justify-center
