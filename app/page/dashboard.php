@@ -12,15 +12,22 @@ $user_id = $_SESSION['id_user'];
 $today = date('Y-m-d');
 $selected_date = isset($_GET['date']) ? $_GET['date'] : $today;
 
-function getFrequencyLabel($frequency, $daily_days, $weekly_count, $end_date) {
+function getFrequencyLabel($frequency, $daily_days, $weekly_count) {
     if ($frequency === 'daily') {
         return 'Daily';
     } elseif ($frequency === 'weekly' && $weekly_count > 0) {
+        if (!empty($daily_days)) {
+            $dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+            $daysArray = explode(',', $daily_days);
+            $labels = [];
+            foreach ($daysArray as $d) {
+                $index = (int)trim($d);
+                if (isset($dayNames[$index])) $labels[] = $dayNames[$index];
+            }
+            return 'Weekly (' . implode(', ', $labels) . ')';
+        }
         return 'Weekly (' . $weekly_count . ' days/week)';
-    } elseif ($frequency === 'custom' && $end_date) {
-        $dateObj = DateTime::createFromFormat('Y-m-d', $end_date);
-        return 'Until ' . ($dateObj ? $dateObj->format('M d, Y') : $end_date);
-    }
+    } 
     return ucfirst($frequency);
 }
 
@@ -62,12 +69,14 @@ $habits = array_filter($all_habits, function($h) use ($selected_date) {
     return true;
 });
 
+// Get completions for selected date
 $stmt = $conn->prepare("SELECT * FROM habit_completions WHERE user_id = ? AND completion_date = ?");
 $stmt->bind_param("is", $user_id, $selected_date);
 $stmt->execute();
 $completions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $completed_habits = array_column($completions, 'habit_id');
 
+// Get completion stats
 $stmt = $conn->prepare("
     SELECT 
         COUNT(DISTINCT CASE WHEN hc.completion_date >= DATE_SUB(?, INTERVAL 7 DAY) THEN h.id END) * 100.0 / 
@@ -249,8 +258,8 @@ $stats = $stmt->get_result()->fetch_assoc();
                 <div id="habitsContainer" class="space-y-4">
                     <?php foreach ($habits as $habit): ?>
                     <div class="habit-card bg-gray-900 rounded-2xl p-6 border border-gray-800 fade-in <?php echo in_array($habit['id'], $completed_habits) ? 'habit-completed' : ''; ?>" 
-                         data-habit-id="<?php echo $habit['id']; ?>"
-                         data-habit-name="<?php echo htmlspecialchars($habit['name']); ?>">
+                        data-habit-id="<?php echo $habit['id']; ?>"
+                        data-habit-name="<?php echo htmlspecialchars($habit['name']); ?>">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center space-x-4 flex-1">
                                 <button class="habit-checkbox w-12 h-12 rounded-lg border-2 transition flex items-center justify-center
