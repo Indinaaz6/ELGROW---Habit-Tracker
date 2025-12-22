@@ -4,10 +4,9 @@ include __DIR__ . '/../config/config.php';
 
 $email_error = '';
 $success_message = '';
-$step = 1; // Step 1: Email, Step 2: Security Question, Step 3: New Password
+$step = 1; 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Step 1: Verify Email
     if (isset($_POST['verify_email'])) {
         $email = mysqli_real_escape_string($conn, $_POST['email']);
         
@@ -24,7 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Step 2: Verify Security Answer (simplified - just confirm email)
     if (isset($_POST['verify_security'])) {
         if (isset($_SESSION['reset_user_id'])) {
             $step = 3;
@@ -34,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     
-    // Step 3: Reset Password
     if (isset($_POST['reset_password'])) {
         if (!isset($_SESSION['reset_user_id'])) {
             header("Location: forgot-password.php");
@@ -64,12 +61,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param("si", $hashed_password, $user_id);
             
             if ($stmt->execute()) {
-                // Clear session
                 unset($_SESSION['reset_user_id']);
                 unset($_SESSION['reset_email']);
                 unset($_SESSION['reset_username']);
                 
-                // Redirect to sign-in with success message
                 header("Location: sign-in.php?reset=success");
                 exit();
             } else {
@@ -81,7 +76,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Check if we're in step 2 or 3
 if (isset($_SESSION['reset_user_id']) && !isset($_POST['verify_email'])) {
     if (isset($_POST['verify_security'])) {
         $step = 3;

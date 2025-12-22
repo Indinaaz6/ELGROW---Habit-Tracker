@@ -69,14 +69,12 @@ $habits = array_filter($all_habits, function($h) use ($selected_date) {
     return true;
 });
 
-// Get completions for selected date
 $stmt = $conn->prepare("SELECT * FROM habit_completions WHERE user_id = ? AND completion_date = ?");
 $stmt->bind_param("is", $user_id, $selected_date);
 $stmt->execute();
 $completions = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 $completed_habits = array_column($completions, 'habit_id');
 
-// Get completion stats
 $stmt = $conn->prepare("
     SELECT 
         COUNT(DISTINCT CASE WHEN hc.completion_date >= DATE_SUB(?, INTERVAL 7 DAY) THEN h.id END) * 100.0 / 
@@ -164,7 +162,6 @@ $stats = $stmt->get_result()->fetch_assoc();
 </head>
 
 <body class="bg-black min-h-screen">
-    <!-- Navbar -->
     <nav class="bg-gray-900 border-b border-gray-800 sticky top-0 z-50 backdrop-blur-md bg-opacity-90">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
@@ -187,9 +184,7 @@ $stats = $stmt->get_result()->fetch_assoc();
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Main Content -->
             <div class="lg:col-span-2 space-y-6">
-                <!-- Date Header with Calendar -->
                 <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800 slide-in">
                     <div class="flex items-center justify-between mb-4">
                         <div>
@@ -226,7 +221,6 @@ $stats = $stmt->get_result()->fetch_assoc();
                         </button>
                     </div>
                     
-                    <!-- Mini Calendar -->
                     <div id="miniCalendar" class="hidden mt-4 bg-gray-800 rounded-lg p-4">
                         <div class="flex items-center justify-between mb-4">
                             <button onclick="changeMonth(-1)" class="text-gray-400 hover:text-white">
@@ -254,7 +248,6 @@ $stats = $stmt->get_result()->fetch_assoc();
                     </div>
                 </div>
 
-                <!-- Habits List -->
                 <div id="habitsContainer" class="space-y-4">
                     <?php foreach ($habits as $habit): ?>
                     <div class="habit-card bg-gray-900 rounded-2xl p-6 border border-gray-800 fade-in <?php echo in_array($habit['id'], $completed_habits) ? 'habit-completed' : ''; ?>" 
@@ -284,7 +277,6 @@ $stats = $stmt->get_result()->fetch_assoc();
                                         <?php endif; ?>
                                         <span class="text-gray-400 text-sm">🔥 <?php echo $habit['streak']; ?> day streak</span>
                                     </div>
-                                    <!-- Frequency Details List -->
                                     <div class="mt-2 text-xs text-gray-400">
                                         <?php if ($habit['frequency'] === 'daily' && $habit['daily_days']): ?>
                                             <div class="flex flex-wrap gap-1">
@@ -360,9 +352,7 @@ $stats = $stmt->get_result()->fetch_assoc();
                 </div>
             </div>
 
-            <!-- Sidebar Stats -->
             <div class="space-y-6">
-                <!-- Progress Card -->
                 <div class="bg-gradient-to-br from-orange-500 to-yellow-500 rounded-2xl p-6 text-white fade-in">
                     <p class="text-sm opacity-90 mb-2">Progress Today</p>
                     <div class="flex items-center justify-between">
@@ -387,7 +377,6 @@ $stats = $stmt->get_result()->fetch_assoc();
                     </div>
                 </div>
 
-                <!-- Weekly Stats -->
                 <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800 fade-in" style="animation-delay: 0.1s;">
                     <h3 class="text-lg font-semibold text-white mb-4">Weekly Overview</h3>
                     <div class="space-y-4">
@@ -398,7 +387,7 @@ $stats = $stmt->get_result()->fetch_assoc();
                             </div>
                             <div class="h-2 bg-gray-800 rounded-full overflow-hidden">
                                 <div class="h-full bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full" 
-                                     style="width: <?php echo round($stats['completion_rate'] ?? 0); ?>%"></div>
+                                    style="width: <?php echo round($stats['completion_rate'] ?? 0); ?>%"></div>
                             </div>
                         </div>
                         <div>
@@ -420,7 +409,6 @@ $stats = $stmt->get_result()->fetch_assoc();
                     </div>
                 </div>
 
-                <!-- Quick Stats -->
                 <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800 fade-in" style="animation-delay: 0.2s;">
                     <h3 class="text-lg font-semibold text-white mb-4">Quick Actions</h3>
                     <div class="space-y-3">
@@ -448,7 +436,6 @@ $stats = $stmt->get_result()->fetch_assoc();
         </div>
     </div>
 
-    <!-- Add/Edit Habit Modal -->
     <div id="habitModal" class="hidden fixed inset-0 bg-black bg-opacity-75 z-50 flex items-center justify-center p-4 modal-backdrop">
         <div class="bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-gray-800 fade-in">
             <div class="flex items-center justify-between mb-6">
@@ -705,8 +692,7 @@ function changeMonth(direction) {
 }
 
 function renderCalendar(date) {
-    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                       'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     
     document.getElementById('calendarMonth').textContent = monthNames[date.getMonth()] + ' ' + date.getFullYear();
     

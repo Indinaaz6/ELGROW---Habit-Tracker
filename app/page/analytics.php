@@ -8,13 +8,11 @@ include __DIR__ . '/../config/config.php';
 
 $user_id = $_SESSION['id_user'];
 
-// Total completions
 $stmt = $conn->prepare("SELECT COUNT(*) AS total FROM habit_completions WHERE user_id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $total = $stmt->get_result()->fetch_assoc()['total'] ?? 0;
 
-// Completions last 7 and 30 days
 $stmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM habit_completions WHERE user_id = ? AND completion_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -25,7 +23,6 @@ $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $last30 = $stmt->get_result()->fetch_assoc()['cnt'] ?? 0;
 
-// Current streak
 $stmt = $conn->prepare("SELECT completion_date FROM habit_completions WHERE user_id = ? GROUP BY completion_date ORDER BY completion_date DESC");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -41,19 +38,16 @@ foreach ($dates as $d) {
     }
 }
 
-// Top habits
 $stmt = $conn->prepare("SELECT h.name, COUNT(hc.id) AS cnt FROM habits h LEFT JOIN habit_completions hc ON h.id = hc.habit_id AND hc.user_id = ? WHERE h.user_id = ? GROUP BY h.id ORDER BY cnt DESC LIMIT 10");
 $stmt->bind_param("ii", $user_id, $user_id);
 $stmt->execute();
 $top = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Daily counts last 14 days
 $stmt = $conn->prepare("SELECT completion_date, COUNT(*) AS cnt FROM habit_completions WHERE user_id = ? AND completion_date >= DATE_SUB(CURDATE(), INTERVAL 13 DAY) GROUP BY completion_date ORDER BY completion_date ASC");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $daily = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
 
-// Build map for days
 $dailyMap = [];
 for ($i = 13; $i >= 0; $i--) {
     $d = date('Y-m-d', strtotime("-{$i} days"));
@@ -63,7 +57,6 @@ foreach ($daily as $d) {
     $dailyMap[$d['completion_date']] = (int)$d['cnt'];
 }
 
-// Calculate percentage changes
 $stmt = $conn->prepare("SELECT COUNT(*) AS cnt FROM habit_completions WHERE user_id = ? AND completion_date >= DATE_SUB(CURDATE(), INTERVAL 14 DAY) AND completion_date < DATE_SUB(CURDATE(), INTERVAL 7 DAY)");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -109,7 +102,6 @@ $change7 = $prev7 > 0 ? round((($last7 - $prev7) / $prev7) * 100) : 0;
 </head>
 <body class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white min-h-screen">
 
-<!-- Header -->
 <div class="sticky top-0 z-10 backdrop-blur-lg bg-gray-900/80 border-b border-gray-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16">
@@ -128,10 +120,8 @@ $change7 = $prev7 > 0 ? round((($last7 - $prev7) / $prev7) * 100) : 0;
 
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
     
-    <!-- Stats Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         
-        <!-- Total Completions -->
         <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 card-hover">
             <div class="flex items-start justify-between mb-4">
                 <div class="stat-icon bg-blue-500/20 text-blue-400">
@@ -143,7 +133,6 @@ $change7 = $prev7 > 0 ? round((($last7 - $prev7) / $prev7) * 100) : 0;
             <div class="text-sm text-gray-400">Total Completions</div>
         </div>
 
-        <!-- Last 7 Days -->
         <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 card-hover">
             <div class="flex items-start justify-between mb-4">
                 <div class="stat-icon bg-green-500/20 text-green-400">
@@ -159,7 +148,6 @@ $change7 = $prev7 > 0 ? round((($last7 - $prev7) / $prev7) * 100) : 0;
             <div class="text-sm text-gray-400">Last 7 Days</div>
         </div>
 
-        <!-- Last 30 Days -->
         <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 card-hover">
             <div class="flex items-start justify-between mb-4">
                 <div class="stat-icon bg-purple-500/20 text-purple-400">
@@ -170,7 +158,6 @@ $change7 = $prev7 > 0 ? round((($last7 - $prev7) / $prev7) * 100) : 0;
             <div class="text-sm text-gray-400">Last 30 Days</div>
         </div>
 
-        <!-- Current Streak -->
         <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-6 rounded-2xl border border-gray-700 card-hover">
             <div class="flex items-start justify-between mb-4">
                 <div class="stat-icon bg-orange-500/20 text-orange-400">
@@ -183,10 +170,8 @@ $change7 = $prev7 > 0 ? round((($last7 - $prev7) / $prev7) * 100) : 0;
 
     </div>
 
-    <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
         
-        <!-- Activity Chart -->
         <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-4 sm:p-6 rounded-2xl border border-gray-700">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg sm:text-xl font-semibold">Activity Trend</h3>
@@ -197,7 +182,6 @@ $change7 = $prev7 > 0 ? round((($last7 - $prev7) / $prev7) * 100) : 0;
             </div>
         </div>
 
-        <!-- Top Habits Chart -->
         <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-4 sm:p-6 rounded-2xl border border-gray-700">
             <div class="flex items-center justify-between mb-4">
                 <h3 class="text-lg sm:text-xl font-semibold">Top Performers</h3>
@@ -210,7 +194,6 @@ $change7 = $prev7 > 0 ? round((($last7 - $prev7) / $prev7) * 100) : 0;
 
     </div>
 
-    <!-- Top Habits List -->
     <div class="bg-gradient-to-br from-gray-800 to-gray-900 p-4 sm:p-6 rounded-2xl border border-gray-700">
         <h3 class="text-lg sm:text-xl font-semibold mb-4 flex items-center">
             <span class="mr-2">🏆</span>
